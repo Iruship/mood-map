@@ -1,0 +1,336 @@
+.live-depression-detection {
+  min-height: 100vh;
+  height: 100vh; /* Force exact viewport height */
+  background-color: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.live-depression-detection .header {
+  background-color: white;
+  padding: 12px 24px; /* Reduced padding */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.live-depression-detection .heading {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.live-depression-detection .back-button {
+  background-color: transparent;
+  color: #2196F3;
+  padding: 8px 16px;
+  border: 1px solid #2196F3;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.live-depression-detection .back-button:hover {
+  background-color: #2196F3;
+  color: white;
+}
+
+.live-depression-detection .container {
+  flex: 1;
+  max-width: 1200px;
+  margin: 16px auto; /* Reduced margin */
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Reduced gap */
+  width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow container to scroll if needed */
+  height: calc(100vh - 60px); /* Subtract header height */
+}
+
+.info-block {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 16px; /* Reduced padding */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.info-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.info-content h3 {
+  color: #1a1a1a;
+  font-size: 18px; /* Reduced size */
+  margin: 0 0 12px 0;
+}
+
+.info-content p {
+  color: #666;
+  line-height: 1.4; /* Reduced line height */
+  margin: 0 0 12px 0;
+  font-size: 14px; /* Reduced size */
+}
+
+.analysis-time {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px; /* Reduced padding */
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.time-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.time-value {
+  color: #2196F3;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.camera-section {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0; /* Allow shrinking */
+  display: flex;
+  flex-direction: column;
+}
+
+.camera-container {
+  aspect-ratio: 16/9;
+  width: 100%;
+  background-color: #000;
+  position: relative;
+  flex: 1;
+  min-height: 0; /* Allow shrinking */
+}
+
+.live-depression-detection #previewCanvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .live-depression-detection .header {
+    padding: 12px 16px;
+  }
+
+  .live-depression-detection .container {
+    gap: 12px;
+    padding: 0 12px;
+    margin: 12px auto;
+  }
+
+  .info-block {
+    padding: 12px;
+  }
+
+  .info-content h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .info-content p {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .analysis-time {
+    padding: 6px 10px;
+  }
+
+  .time-value {
+    font-size: 16px;
+  }
+
+  .live-depression-detection .heading {
+    font-size: 20px;
+  }
+
+  .live-depression-detection .camera-section {
+    border-radius: 8px;
+  }
+}
+
+.live-depression-detection .main-content {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  min-height: 400px;
+}
+
+.live-depression-detection .output-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.live-depression-detection #video {
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  flex: 1;
+}
+
+.live-depression-detection .result {
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  min-height: 50px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* History section */
+.live-depression-detection .history-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.live-depression-detection .capture-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: flex-start;
+  padding: 10px;
+}
+
+.live-depression-detection .history-item {
+  position: relative;
+  width: 150px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.live-depression-detection .history-item:hover {
+  transform: scale(1.05);
+}
+
+.live-depression-detection .history-canvas {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 4px 4px 0 0;
+}
+
+.live-depression-detection .history-info {
+  padding: 8px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.live-depression-detection .history-timestamp {
+  color: #666;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.depression-meter {
+  background-color: white;
+  padding: 16px; /* Reduced padding */
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.depression-score-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.depression-label {
+  font-size: 20px; /* Reduced size */
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+.depression-slider {
+  height: 12px;
+  background: linear-gradient(to right, 
+    #4CAF50 0%,     /* Normal - Green */
+    #FFC107 33%,    /* Mild - Yellow */
+    #FF9800 66%,    /* Moderate - Orange */
+    #F44336 100%    /* Severe - Red */
+  );
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.depression-slider-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: width 0.3s ease;
+}
+
+/* Responsive design for depression meter */
+@media (max-width: 768px) {
+  .depression-meter {
+    padding: 12px;
+  }
+
+  .depression-label {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .depression-slider {
+    height: 8px;
+  }
+}
+
+/* Keep existing styles but remove any margin-top or margin-bottom that might cause overflow */
+.depression-meter {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Remove unused styles */
+.live-depression-detection .main-content,
+.live-depression-detection .output-section,
+.live-depression-detection .history-section,
+.live-depression-detection .capture-history,
+.live-depression-detection .history-item,
+.live-depression-detection .history-canvas,
+.live-depression-detection .history-info,
+.live-depression-detection .history-timestamp {
+  display: none;
+}
+  
