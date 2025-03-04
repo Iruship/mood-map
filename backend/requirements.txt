@@ -8,3 +8,10 @@ pymongo
 python-dotenv
 motor
 fastapi-cors
+email-validator
+python-decouple
+opencv-python
+tensorflow
+keras
+numpy
+pillow
