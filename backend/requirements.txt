@@ -15,3 +15,6 @@ tensorflow
 keras
 numpy
 pillow
+pytest
+pytest-cov
+requests
