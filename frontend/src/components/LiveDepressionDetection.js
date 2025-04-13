@@ -1,12 +1,53 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  LineElement,
+  PointElement
+} from 'chart.js';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import './LiveDepressionDetection.css';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  LineElement,
+  PointElement
+);
 
 const LiveDepressionDetection = () => {
   const navigate = useNavigate();
   const [depressionLevel, setDepressionLevel] = useState('Normal');
   const [depressionScore, setDepressionScore] = useState(0);
   const [analysisTime, setAnalysisTime] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [emotionHistory, setEmotionHistory] = useState([]);
+  const [showSteps, setShowSteps] = useState(true);
+  const [analysisSteps, setAnalysisSteps] = useState([
+    { id: 1, text: 'Video Recorded Successfully', completed: false },
+    { id: 2, text: 'Uploading Video Data', completed: false },
+    { id: 3, text: 'Analyzing Facial Movements', completed: false },
+    { id: 4, text: 'Identifying Emotions', completed: false },
+    { id: 5, text: 'Processing Emotion Patterns', completed: false },
+    { id: 6, text: 'Calculating Stability Metrics', completed: false },
+    { id: 7, text: 'Analyzing Depression Indicators', completed: false },
+    { id: 8, text: 'Generating Final Report', completed: false }
+  ]);
+  const [analysisReport, setAnalysisReport] = useState(null);
   
   // Emotion weights for depression scoring
   const EMOTION_WEIGHTS = {
@@ -40,6 +81,226 @@ const LiveDepressionDetection = () => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Start analysis animation
+  const startAnalysisAnimation = () => {
+    // Immediately mark first step as completed
+    setAnalysisSteps(prev => 
+      prev.map(step => 
+        step.id === 1 
+          ? { ...step, completed: true }
+          : step
+      )
+    );
+
+    // Then start the interval for remaining steps
+    let step = 2;
+    const interval = setInterval(() => {
+      if (step <= analysisSteps.length) {
+        setAnalysisSteps(prev => 
+          prev.map(s => 
+            s.id === step 
+              ? { ...s, completed: true }
+              : s
+          )
+        );
+        step++;
+      } else {
+        clearInterval(interval);
+        // Hide steps after all are complete
+        setTimeout(() => {
+          setAnalysisSteps([]);
+        }, 1000);
+      }
+    }, 500);
+  };
+
+  // Add new analysis functions
+  const analyzeEmotionVariance = (emotionHistory) => {
+    if (!emotionHistory || emotionHistory.length === 0) {
+      return [];
+    }
+    
+    const emotionCounts = {};
+    emotionHistory.forEach(entry => {
+      emotionCounts[entry.emotion] = (emotionCounts[entry.emotion] || 0) + 1;
+    });
+    
+    const totalEntries = emotionHistory.length;
+    const variance = Object.entries(emotionCounts).map(([emotion, count]) => ({
+      emotion,
+      percentage: (count / totalEntries) * 100,
+      count
+    }));
+    
+    return variance.sort((a, b) => b.percentage - a.percentage);
+  };
+
+  const analyzeEmotionTransitions = (emotionHistory) => {
+    if (!emotionHistory || emotionHistory.length < 2) {
+      return [];
+    }
+    
+    const transitions = [];
+    for (let i = 1; i < emotionHistory.length; i++) {
+      const prev = emotionHistory[i - 1].emotion;
+      const current = emotionHistory[i].emotion;
+      if (prev !== current) {
+        transitions.push({ from: prev, to: current });
+      }
+    }
+    return transitions;
+  };
+
+  const analyzeEmotionStability = (emotionHistory) => {
+    if (!emotionHistory || emotionHistory.length < 2) {
+      return [];
+    }
+    
+    const emotionDurations = {};
+    let currentEmotion = emotionHistory[0].emotion;
+    let startTime = new Date(emotionHistory[0].timestamp);
+    
+    for (let i = 1; i < emotionHistory.length; i++) {
+      if (emotionHistory[i].emotion !== currentEmotion) {
+        const endTime = new Date(emotionHistory[i].timestamp);
+        const duration = (endTime - startTime) / 1000; // in seconds
+        
+        if (!emotionDurations[currentEmotion]) {
+          emotionDurations[currentEmotion] = { total: 0, count: 0 };
+        }
+        emotionDurations[currentEmotion].total += duration;
+        emotionDurations[currentEmotion].count += 1;
+        
+        currentEmotion = emotionHistory[i].emotion;
+        startTime = endTime;
+      }
+    }
+    
+    return Object.entries(emotionDurations).map(([emotion, data]) => ({
+      emotion,
+      averageDuration: data.total / data.count
+    })).sort((a, b) => b.averageDuration - a.averageDuration);
+  };
+
+  const generateAnalysisReport = (emotionHistory) => {
+    if (!emotionHistory || emotionHistory.length === 0) {
+      return {
+        dominantEmotion: { emotion: 'No Data', percentage: 0 },
+        emotionDistribution: [],
+        emotionStability: [],
+        totalTransitions: 0,
+        mostCommonTransition: null,
+        recordingDuration: analysisTime,
+        depressionLevel: depressionLevel,
+        depressionScore: depressionScore
+      };
+    }
+    
+    const variance = analyzeEmotionVariance(emotionHistory);
+    const transitions = analyzeEmotionTransitions(emotionHistory);
+    const stability = analyzeEmotionStability(emotionHistory);
+    
+    return {
+      dominantEmotion: variance[0] || { emotion: 'No Data', percentage: 0 },
+      emotionDistribution: variance,
+      emotionStability: stability,
+      totalTransitions: transitions.length,
+      mostCommonTransition: findMostCommonTransition(transitions),
+      recordingDuration: analysisTime,
+      depressionLevel: depressionLevel,
+      depressionScore: depressionScore
+    };
+  };
+
+  const findMostCommonTransition = (transitions) => {
+    const transitionCounts = {};
+    transitions.forEach(transition => {
+      const key = `${transition.from}→${transition.to}`;
+      transitionCounts[key] = (transitionCounts[key] || 0) + 1;
+    });
+    
+    const mostCommon = Object.entries(transitionCounts)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    return mostCommon ? {
+      transition: mostCommon[0],
+      count: mostCommon[1]
+    } : null;
+  };
+
+  // Modify the stop recording handler
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    setShowAnalysis(true);
+    setShowSteps(true);
+    setAnalysisReport(null);
+    
+    // Reset steps
+    setAnalysisSteps(steps => steps.map(step => ({ ...step, completed: false })));
+
+    // Stop video stream
+    const videoEl = document.getElementById('video');
+    if (videoEl && videoEl.srcObject) {
+      const tracks = videoEl.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+    }
+
+    // Mark first step as completed immediately
+    setAnalysisSteps(steps => 
+      steps.map(step => 
+        step.id === 1
+          ? { ...step, completed: true } 
+          : step
+      )
+    );
+
+    // Function to get random interval between 500ms and 1500ms
+    const getRandomInterval = () => Math.floor(Math.random() * 1000) + 500;
+
+    // Start loop from step 2 with random intervals
+    let currentStep = 1;
+    const processNextStep = () => {
+      if (currentStep <= 8) {  // Updated to match new number of steps
+        setAnalysisSteps(steps => 
+          steps.map(step => 
+            step.id === currentStep
+              ? { ...step, completed: true } 
+              : step
+          )
+        );
+        currentStep++;
+        // Schedule next step with random interval
+        setTimeout(processNextStep, getRandomInterval());
+      } else {
+        // Show report after steps complete
+        setShowSteps(false);
+        // Wait 500ms before showing the report to ensure smooth transition
+        setTimeout(() => {
+          const report = generateAnalysisReport(emotionHistory);
+          setAnalysisReport(report);
+        }, 500);
+      }
+    };
+
+    // Start the process after a delay
+    setTimeout(() => {
+      processNextStep();
+    }, 1500); // Add 1.5s delay before starting the loop
+  };
+
+  // Add handler to close analysis popup
+  const handleCloseAnalysis = () => {
+    // Stop any video tracks first
+    const videoEl = document.getElementById('video');
+    if (videoEl && videoEl.srcObject) {
+      const tracks = videoEl.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+    }
+
+    // Reload the page to reset everything
+    window.location.reload();
   };
 
   // Handle cleanup when navigating away
@@ -80,7 +341,6 @@ const LiveDepressionDetection = () => {
         let lastProcessedTime = 0;
         const PROCESS_INTERVAL = 100;  
         let lastDetectedFaces = [];
-        let emotionHistory = [];
         let startTime = Date.now();
         
         // Update analysis time every second
@@ -114,14 +374,6 @@ const LiveDepressionDetection = () => {
           
           // Normalize to 0-1 range
           return Math.max(0, Math.min(1, (score + 1) / 2));
-        }
-
-        // Calculate average depression score from history
-        function calculateAverageScore() {
-          if (emotionHistory.length === 0) return 0;
-          
-          const totalScore = emotionHistory.reduce((sum, entry) => sum + entry.depressionScore, 0);
-          return totalScore / emotionHistory.length;
         }
 
         async function setupCamera() {
@@ -208,25 +460,19 @@ const LiveDepressionDetection = () => {
                   // Calculate depression score
                   const currentDepressionScore = calculateDepressionScore(data.faces);
                   
-                  // Store score in history
-                  emotionHistory.push({
+                  // Store emotion data using the provided function
+                  if (window.updateEmotionHistory) {
+                    window.updateEmotionHistory({
                     timestamp: new Date().toISOString(),
                     emotion: data.faces[0].emotion,
                     depressionScore: currentDepressionScore
                   });
-                  
-                  // Keep only last 100 entries
-                  if (emotionHistory.length > 100) {
-                    emotionHistory.shift();
                   }
                   
-                  // Calculate and update average depression score
-                  const averageScore = calculateAverageScore();
-                  window.updateDepressionScore(averageScore);
-                  
-                  console.log('Current emotion:', data.faces[0].emotion);
-                  console.log('Depression score:', currentDepressionScore);
-                  console.log('Average depression score:', averageScore);
+                  // Update depression score
+                  if (window.updateDepressionScore) {
+                    window.updateDepressionScore(currentDepressionScore);
+                  }
                 }
               } catch (err) {
                 console.error('Error processing frame:', err);
@@ -244,7 +490,7 @@ const LiveDepressionDetection = () => {
     `;
     document.body.appendChild(script);
 
-    // Add global function to update depression score and analysis time
+    // Add global functions
     window.updateDepressionScore = (score) => {
       setDepressionScore(score);
       setDepressionLevel(calculateDepressionLevel(score));
@@ -252,6 +498,17 @@ const LiveDepressionDetection = () => {
 
     window.updateAnalysisTime = (seconds) => {
       setAnalysisTime(seconds);
+    };
+
+    window.updateEmotionHistory = (entry) => {
+      setEmotionHistory(prev => {
+        const newHistory = [...prev, entry];
+        // Keep only last 100 entries to prevent memory issues
+        if (newHistory.length > 100) {
+          return newHistory.slice(-100);
+        }
+        return newHistory;
+      });
     };
 
     return () => {
@@ -273,6 +530,7 @@ const LiveDepressionDetection = () => {
 
       delete window.updateDepressionScore;
       delete window.updateAnalysisTime;
+      delete window.updateEmotionHistory;
     };
   }, []);
 
@@ -286,39 +544,234 @@ const LiveDepressionDetection = () => {
       </div>
       
       <div className="container">
-        <div className="info-block">
-          <div className="info-content">
-            <h3>About the Analysis</h3>
-            <p>
-              The analysis becomes more accurate over time as it collects more emotional data. 
-              Longer analysis times provide a more reliable assessment of your emotional state.
-            </p>
-            <div className="analysis-time">
-              <span className="time-label">Analysis Time:</span>
-              <span className="time-value">{formatTime(analysisTime)}</span>
-            </div>
-          </div>
-        </div>
-
         <div className="camera-section">
           <div className="camera-container">
             <video id="video" autoPlay playsInline style={{ display: 'none' }}></video>
             <canvas id="previewCanvas"></canvas>
             <canvas id="canvas" style={{ display: 'none' }}></canvas>
           </div>
+          
+          {!isRecording && !showAnalysis ? (
+            <button 
+              className="start-recording-button"
+              onClick={() => setIsRecording(true)}
+            >
+              Start Recording
+            </button>
+          ) : isRecording ? (
+            <div className="recording-controls">
+              <div className="recording-timer">{formatTime(analysisTime)}</div>
+              <button 
+                className="stop-recording-button"
+                onClick={handleStopRecording}
+              >
+                Stop Recording
+              </button>
+            </div>
+          ) : null}
         </div>
         
-        <div className="depression-meter">
-          <div className="depression-score-container">
-            <div className="depression-label">{depressionLevel}</div>
-            <div className="depression-slider">
-              <div 
-                className="depression-slider-fill" 
-                style={{ width: `${depressionScore * 100}%` }}
-              />
+        {showAnalysis && (
+          <div className="analysis-overlay">
+            <div className="analysis-popup">
+              <button className="close-analysis" onClick={handleCloseAnalysis}>×</button>
+              
+              {showSteps ? (
+                <div className="analysis-steps">
+                  {analysisSteps.map(step => (
+                    <div key={step.id} className={`analysis-step ${step.completed ? 'completed' : ''}`}>
+                      <div className="step-checkmark">{step.completed ? '✓' : ''}</div>
+                      <div className="step-text">{step.text}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                analysisReport && (
+                  <div className="analysis-report">
+                    <h2 className="report-title">Emotional Analysis Report</h2>
+                    
+                    <div className="report-grid">
+                      {/* Dominant Emotion Section */}
+                      <div className="report-section">
+                        <h3>Dominant Emotion</h3>
+                        <div className="dominant-emotion">
+                          <span className="emotion-label">{analysisReport.dominantEmotion.emotion}</span>
+                          <span className="emotion-percentage">
+                            {analysisReport.dominantEmotion.percentage.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="chart-container">
+                          <Doughnut
+                            data={{
+                              labels: ['Dominant', 'Other'],
+                              datasets: [{
+                                data: [
+                                  analysisReport.dominantEmotion.percentage,
+                                  100 - analysisReport.dominantEmotion.percentage
+                                ],
+                                backgroundColor: ['#28a745', '#e9ecef'],
+                                borderWidth: 0
+                              }]
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              plugins: {
+                                legend: {
+                                  display: false
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Emotion Distribution Section */}
+                      <div className="report-section">
+                        <h3>Emotion Distribution</h3>
+                        <div className="chart-container">
+                          <Bar
+                            data={{
+                              labels: analysisReport.emotionDistribution.map(item => item.emotion),
+                              datasets: [{
+                                data: analysisReport.emotionDistribution.map(item => item.percentage),
+                                backgroundColor: '#007bff',
+                                borderRadius: 4
+                              }]
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              plugins: {
+                                legend: {
+                                  display: false
+                                }
+                              },
+                              scales: {
+                                y: {
+                                  beginAtZero: true,
+                                  max: 100
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Emotion Stability Section */}
+                      <div className="report-section">
+                        <h3>Emotion Stability</h3>
+                        <div className="emotion-stability">
+                          {analysisReport.emotionStability.map((item, index) => (
+                            <div key={index} className="stability-item">
+                              <span className="emotion-label">{item.emotion}</span>
+                              <span className="stability-duration">
+                                {item.averageDuration.toFixed(1)}s average
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="chart-container">
+                          <Bar
+                            data={{
+                              labels: analysisReport.emotionStability.map(item => item.emotion),
+                              datasets: [{
+                                data: analysisReport.emotionStability.map(item => item.averageDuration),
+                                backgroundColor: '#007bff',
+                                borderRadius: 4
+                              }]
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              plugins: {
+                                legend: {
+                                  display: false
+                                }
+                              },
+                              scales: {
+                                y: {
+                                  beginAtZero: true,
+                                  title: {
+                                    display: true,
+                                    text: 'Average Duration (seconds)'
+                                  }
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Depression Assessment Section */}
+                      <div className="report-section">
+                        <h3>Depression Assessment</h3>
+                        <div className="depression-assessment">
+                          <div className="depression-level">
+                            <div>Level</div>
+                            <div>{analysisReport.depressionLevel}</div>
+                          </div>
+                          <div className="depression-score">
+                            <div>Score</div>
+                            <div>{(analysisReport.depressionScore * 100).toFixed(1)}%</div>
+                          </div>
+                        </div>
+                        <div className="chart-container">
+                          <Doughnut
+                            data={{
+                              labels: ['Depression Risk', 'Normal'],
+                              datasets: [{
+                                data: [
+                                  analysisReport.depressionScore * 100,
+                                  100 - (analysisReport.depressionScore * 100)
+                                ],
+                                backgroundColor: ['#dc3545', '#e9ecef'],
+                                borderWidth: 0
+                              }]
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              plugins: {
+                                legend: {
+                                  position: 'bottom'
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Emotion Transitions Section */}
+                      <div className="report-section" style={{ gridColumn: '1 / -1' }}>
+                        <h3>Emotion Transitions</h3>
+                        <div className="transition-stats">
+                          <div className="transition-count">
+                            <div>Total Transitions</div>
+                            <div style={{ fontSize: '2rem', fontWeight: '600', marginTop: '0.5rem' }}>
+                              {analysisReport.totalTransitions}
+                            </div>
+                          </div>
+                          {analysisReport.mostCommonTransition && (
+                            <div className="common-transition">
+                              <div>Most Common Transition</div>
+                              <div style={{ fontSize: '1.2rem', fontWeight: '500', marginTop: '0.5rem' }}>
+                                {analysisReport.mostCommonTransition.transition}
+                                <div style={{ fontSize: '1rem', color: '#666', marginTop: '0.25rem' }}>
+                                  ({analysisReport.mostCommonTransition.count} times)
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
