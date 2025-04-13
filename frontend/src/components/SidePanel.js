@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import './SidePanel.css';
 
-
-const SidePanel = ({ username }) => {
+const SidePanel = ({ username, onPHQTestClick }) => {
   const navigate = useNavigate();
 
   const handleLogout = (e) => {
@@ -33,7 +32,7 @@ const SidePanel = ({ username }) => {
         <button className="transparent-button" onClick={() => navigate('/onboarding')}>
           Onboarding
         </button>
-        <button className="transparent-button" onClick={() => navigate('/phq-test')}>
+        <button className="transparent-button" onClick={onPHQTestClick}>
           PHQ-9 Test
         </button>
         <button className="transparent-button" onClick={() => navigate('/help-line')}>
