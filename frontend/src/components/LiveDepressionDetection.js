@@ -202,6 +202,13 @@ const LiveDepressionDetection = () => {
     const transitions = analyzeEmotionTransitions(emotionHistory);
     const stability = analyzeEmotionStability(emotionHistory);
     
+    // Calculate a more comprehensive depression score based on emotion distribution
+    const calculatedDepressionScore = calculateWeightedDepressionScore(variance);
+    // Use the calculated score if it's available, otherwise fall back to the current score
+    const finalDepressionScore = calculatedDepressionScore !== null ? calculatedDepressionScore : depressionScore;
+    // Calculate depression level based on the score
+    const finalDepressionLevel = calculateDepressionLevel(finalDepressionScore);
+    
     return {
       dominantEmotion: variance[0] || { emotion: 'No Data', percentage: 0 },
       emotionDistribution: variance,
@@ -209,9 +216,28 @@ const LiveDepressionDetection = () => {
       totalTransitions: transitions.length,
       mostCommonTransition: findMostCommonTransition(transitions),
       recordingDuration: analysisTime,
-      depressionLevel: depressionLevel,
-      depressionScore: depressionScore
+      depressionLevel: finalDepressionLevel,
+      depressionScore: finalDepressionScore
     };
+  };
+
+  // New function to calculate depression score from emotion distribution
+  const calculateWeightedDepressionScore = (emotionDistribution) => {
+    if (!emotionDistribution || emotionDistribution.length === 0) {
+      return null;
+    }
+    
+    let totalScore = 0;
+    
+    // Calculate weighted average based on emotion distribution
+    emotionDistribution.forEach(item => {
+      const weight = EMOTION_WEIGHTS[item.emotion] || 0;
+      // Use percentage as weight for each emotion
+      totalScore += weight * (item.percentage / 100);
+    });
+    
+    // Normalize to 0-1 range (same as done in the original function)
+    return Math.max(0, Math.min(1, (totalScore + 1) / 2));
   };
 
   const findMostCommonTransition = (transitions) => {
