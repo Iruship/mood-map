@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
+#TODO: ALL MODELS SHOULD BE IN A MODEL FOLDER
 class EmotionDetectionService:
     EMOTION_DICT = {
         0: "Angry",
@@ -21,7 +22,7 @@ class EmotionDetectionService:
     def initialize_models(self):
         """Initialize the emotion detection and face detection models"""
         try:
-            self.emotion_model = tf.keras.models.load_model('./ml/emotion.keras')
+            self.emotion_model = tf.keras.models.load_model('./ml/emotion_model.keras')
             self.face_detector = cv2.CascadeClassifier(
                 cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml'
             )

@@ -40,7 +40,7 @@ def calculate_severity(total_score: int) -> str:
     for level, range_ in SEVERITY_LEVELS.items():
         if range_["min"] <= total_score <= range_["max"]:
             return level
-    return "severe"  # fallback for scores > 27
+    return "severe" 
 
 @router.post("/submit", response_model=PHQ9Response, status_code=status.HTTP_201_CREATED)
 async def submit_phq9(

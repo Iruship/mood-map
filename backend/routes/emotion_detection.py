@@ -7,11 +7,6 @@ emotion_service = EmotionDetectionService()
 
 @router.post("/detect", response_model=EmotionDetectionResponse)
 async def detect_emotion(image: UploadFile = File(...)):
-    """
-    Process image for emotion detection without authentication.
-    This endpoint is intentionally left unauthenticated to minimize latency
-    for real-time emotion detection processing.
-    """
     try:
         if not emotion_service.is_initialized():
             return EmotionDetectionResponse(
